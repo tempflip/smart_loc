@@ -2,7 +2,7 @@ import ip_webcam
 import json
 import time
 
-cam = ip_webcam.ip_webcam()
+cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.0.190:8080/sensors.json')
 
 
 #print cam.desc_sense('gyro')
