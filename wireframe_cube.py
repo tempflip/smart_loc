@@ -74,16 +74,27 @@ class Simulation:
         
     def run(self):
 
-        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.0.190:8080/sensors.json', sense=['gyro', 'rot_vector'])
+        TO_DEG = 57.2958
+
+        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.100.142:8080/sensors.json', sense=['gyro', 'rot_vector'])
 
         FPS = 50
         sense_ticker = 0
-        sense_per_frame = 10
-        rot_multipl = 12
+        sense_per_frame = 12
+        rot_multipl = 8
 
         timestamp = 0
         last_timestamp = 0
         """ Main Loop """
+
+        adjustX = 0
+        adjustY = 0
+        adjustZ = 0
+
+        rot_axis_x = 1
+        rot_axis_y = 1
+        rot_axis_z = 1
+
         while 1:
 
             for event in pygame.event.get():
@@ -102,12 +113,27 @@ class Simulation:
                 dt = timestamp - last_timestamp
                 last_timestamp = timestamp
 
-                rot_x, rot_y, rot_z = sense['gyro'][1]
-                print sense, dt
+                gyro_x, gyro_y, gyro_z = sense['gyro'][1]
+                rot_x, rot_y, rot_z, rot_cos, acc = sense['rot_vector'][1]
 
-                self.angleX += rot_x * rot_multipl
-                self.angleY += rot_y * rot_multipl
-                self.angleZ += rot_z * rot_multipl
+                rot_axis, angle = ip_webcam.calc_rot(rot_x, rot_y, rot_z, rot_cos)
+
+                rot_axis_x = rot_axis[0]
+                rot_axis_y = rot_axis[1]
+                rot_axis_z = rot_axis[2]
+
+                (alpha, beta) = ip_webcam.rot_axis_to_angle(rot_axis_x, rot_axis_y, rot_axis_z)
+
+                #print "rot_x: {}, rot_y: {}, rot_z: {}".format(gyro_x, gyro_y, gyro_z)
+                #print "rot_axis x:{} angle: {}".format(rot_axis, angle)
+                print "alpha {} beta {} gamma {} ".format(alpha * TO_DEG, beta * TO_DEG, angle * TO_DEG)
+
+
+                self.angleX = alpha * TO_DEG
+                self.angleY = angle * TO_DEG
+                self.angleZ = beta * TO_DEG
+
+
 
             #print gyro_data
 
@@ -141,12 +167,22 @@ class Simulation:
                 self.angleZ -= 1
 
             if keys[K_SPACE] :
+                #adjustX = self.angleX
+                #adjustY = self.angleY
+                #adjustZ = self.angleZ
+
                 self.angleX = 0
                 self.angleY = 0
                 self.angleZ = 0
 
             self.clock.tick(FPS)
             self.screen.fill((0,0,0))
+
+            #rot_axis_start = Point3D(x = 0, y = 0, z = 0).project(self.screen.get_width(), self.screen.get_height(), 256, 4)
+            #rot_axis_end = Point3D(x = rot_axis_x * 4, y = rot_axis_x * 4, z = rot_axis_z * 4).project(self.screen.get_width(), self.screen.get_height(), 256, 4)
+
+
+            #pygame.draw.line(self.screen, (255, 10, 10), (rot_axis_start.x, rot_axis_start.y), (rot_axis_end.x, rot_axis_end.y))
 
             # Will hold transformed vertices.
             t = []
@@ -164,10 +200,6 @@ class Simulation:
                 pygame.draw.line(self.screen, (255,255,255), (t[f[1]].x, t[f[1]].y), (t[f[2]].x, t[f[2]].y))
                 pygame.draw.line(self.screen, (255,255,255), (t[f[2]].x, t[f[2]].y), (t[f[3]].x, t[f[3]].y))
                 pygame.draw.line(self.screen, (255,255,255), (t[f[3]].x, t[f[3]].y), (t[f[0]].x, t[f[0]].y))
-                
-            #self.angleX += 1
-            #self.angleY += 1
-            #self.angleZ += 1
             
             pygame.display.flip()
 
