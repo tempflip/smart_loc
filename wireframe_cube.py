@@ -76,11 +76,11 @@ class Simulation:
 
         TO_DEG = 57.2958
 
-        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.100.142:8080/sensors.json', sense=['gyro', 'rot_vector'])
+        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.0.190:8080/sensors.json', sense=['gyro', 'rot_vector'])
 
         FPS = 50
         sense_ticker = 0
-        sense_per_frame = 12
+        sense_per_frame = 6
         rot_multipl = 8
 
         timestamp = 0
@@ -129,9 +129,9 @@ class Simulation:
                 print "alpha {} beta {} gamma {} ".format(alpha * TO_DEG, beta * TO_DEG, angle * TO_DEG)
 
 
-                self.angleX = alpha * TO_DEG
-                self.angleY = angle * TO_DEG
-                self.angleZ = beta * TO_DEG
+                self.angleX = alpha * TO_DEG  - adjustX
+                self.angleY = angle * TO_DEG - adjustY
+                self.angleZ = beta * TO_DEG - adjustZ
 
 
 
@@ -167,13 +167,9 @@ class Simulation:
                 self.angleZ -= 1
 
             if keys[K_SPACE] :
-                #adjustX = self.angleX
-                #adjustY = self.angleY
-                #adjustZ = self.angleZ
-
-                self.angleX = 0
-                self.angleY = 0
-                self.angleZ = 0
+                adjustX = self.angleX
+                adjustY = self.angleY
+                adjustZ = self.angleZ
 
             self.clock.tick(FPS)
             self.screen.fill((0,0,0))

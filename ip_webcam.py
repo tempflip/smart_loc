@@ -75,7 +75,7 @@ def rot_axis_to_angle(x, y, z):
 	norm_val = math.sqrt(x**2 + y**2 + z**2)
 	x = x / norm_val
 	y = y / norm_val
-	z = z = norm_val
+	z = z / norm_val
 
 	beta = math.asin(y)
 	alpha = math.acos( x / math.cos(beta))
