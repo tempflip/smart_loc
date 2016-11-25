@@ -1,6 +1,8 @@
 from math import *
 import pygame
 import numpy as np
+from scipy import misc
+
 
 TO_DEG = 57.2958
 
@@ -49,10 +51,15 @@ class Plane():
 
 		m_a = np.array([[cos(a), -sin(a)], [sin(a), cos(a)]])
 
-		for p in self.point_list:
-			coord = np.dot(m_a, np.array([[p.x], [p.y]]) )
-			p.set_coord(coord[0][0], coord[1][0], p.z)
 
+		for p in self.point_list:
+			norm_x = p.x - center[0]
+			norm_y = p.y - center[1]
+			norm_z = p.z - center[1]
+
+
+			coord = np.dot(m_a, np.array([[norm_x], [norm_y]]) )
+			p.set_coord(coord[0][0] + center[0], coord[1][0] + center[1], p.z)
 
 
 	def draw(self, pygame_display, color = (255, 255, 255), viewer_pos=(150, 150, 100)):
@@ -79,4 +86,54 @@ class PlaneGroup():
 	def rot(self, center, a):
 		for plane in self.plane_list:
 			plane.rot(center, a)
+
+class Img:
+	def __init__(self, fname=None, w=200, h=200):
+		if fname != None:
+			self.image = self.get_img(fname, w, h)
+		self.set_rot(0)
+		self.set_scale(1)
+		self.set_shear((0,0))
+
+	def get_img(self, fname, w, h):
+		self.img = misc.imread(fname, mode='L')
+		self.img = misc.imresize(self.img, (w, h))
+
+
+	def draw(self, pygame_display):
+		for y, row in  enumerate(self.img):
+			for x, pix in enumerate(row):
+				xx, yy = self.apply_trans(x-self.center[0], y-self.center[1])
+
+				pygame_display.set_at((xx+self.center[0], yy+self.center[1]), (pix, pix, pix))
+
+	def set_rot(self, deg, center=(0,0)):
+		self.rot = deg
+		self.rot_matrix = np.array([[ cos(deg), - sin(deg)],
+								    [ sin(deg),   cos(deg)]])
+		self.center = center
+
+	def set_scale(self, scale):
+		self.scale = scale
+		self.scale_matrix = np.array([[self.scale, 0          ],
+									   [     0    , self.scale ]])
+
+	def set_shear(self, shear):
+		self.shear_x, self.shear_y = shear
+		self.shear_matrix = np.array([[1,           self.shear_x],
+									  [self.shear_y,     1     ]])
+
+	def apply_trans(self, x, y):
+		new_vector = np.dot(self.scale_matrix, np.array([[x],[y]]))
+		new_vector = np.dot(self.shear_matrix, new_vector)
+		new_vector = np.dot(self.rot_matrix, new_vector)
+
+		return new_vector[0], new_vector[1]
+
+	#def apply_scale(self, x, y):
+
+
+
+
+
 
