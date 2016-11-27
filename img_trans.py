@@ -3,7 +3,7 @@ import sys, math, pygame
 from pygame.locals import *
 
 
-FPS = 50
+FPS = 25
 WIN_WIDTH = 500
 WIN_HEIGHT = 500
 WHITE = (255, 255, 255)
@@ -50,7 +50,7 @@ def run():
 			img.set_rot(img.rot - pi / 40, center=center)
 
 		if keys[K_RIGHT] :
-			img.set_rot(img.rot + pi / 10, center=center)
+			img.set_rot(img.rot + pi / 40, center=center)
 
 		if keys[K_m] :
 			img.set_shear((img.shear_x + 0.3, img.shear_y))

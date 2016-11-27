@@ -1,7 +1,9 @@
 from math import *
 import pygame
 import numpy as np
-from scipy import misc
+#from scipy import misc
+import cv2
+import matplotlib.pyplot as plt
 
 
 TO_DEG = 57.2958
@@ -71,6 +73,11 @@ class Plane():
 		for p in self.point_list:
 			print p
 
+	def get_points(self, viewer_pos=(150, 150, 100)):
+		pts = []
+		for p in self.point_list:
+			pts.append(p.proj_2d(viewer_pos=viewer_pos))
+		return pts
 
 class PlaneGroup():
 	def __init__(self, plane_list=[]):
@@ -89,49 +96,139 @@ class PlaneGroup():
 
 class Img:
 	def __init__(self, fname=None, w=200, h=200):
+		self.shear_matrix = None
+		self.scale_matrix = None
+		self.rot_matrix = None
+		self.w = w
+		self.h = h
+
 		if fname != None:
-			self.image = self.get_img(fname, w, h)
-		self.set_rot(0)
+			self.image = self.get_img(fname)
 		self.set_scale(1)
 		self.set_shear((0,0))
-
-	def get_img(self, fname, w, h):
-		self.img = misc.imread(fname, mode='L')
-		self.img = misc.imresize(self.img, (w, h))
+		self.set_rot(0, (0, 0))
+		self.update_trans_matrix()
 
 
+
+	def get_img(self, fname):
+		self.img = cv2.imread(fname, 0)
+		self.img = cv2.resize(self.img, (self.w, self.h))
+
+
+	# draws the image using the transformation params
 	def draw(self, pygame_display):
+		row_x = []
+		row_y = []
+		row_z = [] # this going to be a dummy 1 row
+		pix_list = []
+
 		for y, row in  enumerate(self.img):
 			for x, pix in enumerate(row):
-				xx, yy = self.apply_trans(x-self.center[0], y-self.center[1])
+				row_x.append(x)
+				row_y.append(y)
+				row_z.append(1)
+				pix_list.append(pix)
 
-				pygame_display.set_at((xx+self.center[0], yy+self.center[1]), (pix, pix, pix))
 
-	def set_rot(self, deg, center=(0,0)):
+		img_matrix = np.array([row_x, row_y, row_z])
+		img_matrix = np.dot(self.trans_matrix, img_matrix)
+
+		for i, pix in enumerate(pix_list):
+			pygame_display.set_at((int(img_matrix[0][i]) + self.center[1], int(img_matrix[1][i]) + self.center[0]), (pix, pix, pix))
+
+
+	# draws the transferred to the provided points
+	# dest : (4,2) numpy list of destination points
+
+	def draw2(self, pygame_display, dest):
+		src = np.zeros((4, 2), dtype="float32")
+		dst = order_points(dest)
+
+		src[1] = [self.w, 0]
+		src[2] = [self.w, self.h]
+		src[3] = [0, self.h]
+
+		M = cv2.getPerspectiveTransform(src, dst)
+
+		warped = cv2.warpPerspective(self.img, M, (dst[1][0], dst[2][1]))
+		#plt.imshow(warped, interpolation="none")
+		#plt.show()
+		for y, row  in enumerate(warped):
+			for x, pix in enumerate(row):
+				if pix == 0 : continue
+				pygame_display.set_at((x,y), (pix, pix, pix))
+
+	def set_rot(self, deg, center):
 		self.rot = deg
-		self.rot_matrix = np.array([[ cos(deg), - sin(deg)],
-								    [ sin(deg),   cos(deg)]])
+		self.rot_matrix = np.array([[ cos(deg), - sin(deg), 0],
+								    [ sin(deg),   cos(deg), 0],
+								    [0, 0, 1]])
 		self.center = center
+
+		self.update_trans_matrix()
 
 	def set_scale(self, scale):
 		self.scale = scale
-		self.scale_matrix = np.array([[self.scale, 0          ],
-									   [     0    , self.scale ]])
+		self.scale_matrix = np.array([[self.scale, 0          , 0],
+									   [     0    , self.scale, 0 ],
+									   [0, 0, 1]])
+
+		self.update_trans_matrix()
+
 
 	def set_shear(self, shear):
 		self.shear_x, self.shear_y = shear
-		self.shear_matrix = np.array([[1,           self.shear_x],
-									  [self.shear_y,     1     ]])
+		
+		self.shear_matrix = np.array([[1,           self.shear_x, 0],
+									  [self.shear_y,     1      , 0],
+									  [0, 0, 1]])
 
-	def apply_trans(self, x, y):
-		new_vector = np.dot(self.scale_matrix, np.array([[x],[y]]))
-		new_vector = np.dot(self.shear_matrix, new_vector)
-		new_vector = np.dot(self.rot_matrix, new_vector)
+		self.update_trans_matrix()
 
-		return new_vector[0], new_vector[1]
 
-	#def apply_scale(self, x, y):
+	def update_trans_matrix(self):
+		if self.shear_matrix == None : return
+		if self.scale_matrix == None : return
+		if self.rot_matrix == None : return
 
+		self.trans_matrix = np.dot(self.scale_matrix, self.shear_matrix)
+		self.trans_matrix = np.dot(self.trans_matrix, self.rot_matrix)
+		print "trans_matrix:", self.trans_matrix
+		print "inv", np.linalg.inv(self.trans_matrix)
+
+	def set_trans_matrix(self, m):
+		self.trans_matrix = np.array(m)
+
+
+# a helper to order the points clockwise, starting from top left
+def order_points(point_list):
+	pts = np.array(point_list, dtype="float32")
+	r = np.zeros((4,2), dtype="float32")
+	sums = pts.sum(axis=1)
+	r[0] = pts[np.argmin(sums)]
+	r[2] = pts[np.argmax(sums)]
+
+	diffs = np.diff(pts, axis=1)
+
+	r[1] = pts[np.argmin(diffs)]
+	r[3] = pts[np.argmax(diffs)]
+
+	return r
+
+
+
+
+
+# a -> starting position, b -> result position
+# returns a transaction matrix M, so a * b = M
+def calc_trans_matrix(a, b):
+	a = np.array(a)
+	b = np.array(b)
+
+	M = np.dot(np.linalg.inv(a), b)
+
+	return M
 
 
 

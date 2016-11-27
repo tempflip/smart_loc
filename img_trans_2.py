@@ -3,18 +3,20 @@ import sys, math, pygame
 from pygame.locals import *
 
 
-FPS = 50
+FPS = 25
 WIN_WIDTH = 500
 WIN_HEIGHT = 500
 WHITE = (255, 255, 255)
 
+center = (200, 200, 200)
+
 img = Img('pusheen.png', w=100, h=100)
 
-g = PlaneGroup();
+pts = np.array([[100,100],[150,150], [100,150], [180,100]])
 
-for n in range(10):
-	plane1 = Plane([P3d(10,10,40 * n), P3d(300,10,40 * n), P3d(300,300,40 * n), P3d(10,300,40 * n)])
-	g.add_plane(plane1)
+
+#img.draw2(None, pts)
+
 
 
 def run():
@@ -26,15 +28,9 @@ def run():
 	pygame.display.set_caption("Wooo Hoooo")
 
 
-	center = (200, 200, 200)
+	
 
-	vx = 100
-	vy = 150
-	vz = 100
 
-	ra = math.pi
-	rb = math.pi
-	rg = math.pi
 
 	while 1:
 
@@ -42,46 +38,47 @@ def run():
 			if event.type == pygame.QUIT:
 				sys.exit()
 
+
 		keys = pygame.key.get_pressed()
 		
+		"""
 		if keys[K_DOWN] :
-			vy += 1
+			img.set_scale(img.scale - 0.1)
 
 		if keys[K_UP] :
-			vy -= 1
+			img.set_scale(img.scale + 0.1)
 
 		if keys[K_LEFT] :
-			vx += 1
+			img.set_rot(img.rot - pi / 40, center=center)
 
 		if keys[K_RIGHT] :
-			vx -= 1
+			img.set_rot(img.rot + pi / 40, center=center)
 
 		if keys[K_m] :
-			vz += 1
+			img.set_shear((img.shear_x + 0.3, img.shear_y))
 
 		if keys[K_n] :
-			vz -= 1
+			img.set_shear((img.shear_x - 0.3, img.shear_y))
 
-		if keys[K_a] :
-			g.rot(center, -pi / 100)
 
-		if keys[K_d] :
-			g.rot(center, pi / 100)
+		if keys[K_b] :
+			img.set_shear((img.shear_x, img.shear_y + 0.3))
+
+		if keys[K_v] :
+			img.set_shear((img.shear_x, img.shear_y - 0.3))
 
 		if keys[K_SPACE] :
 			pass
-
+		"""
 
 
 		clock.tick(FPS)
 		screen.fill((0,0,0))
-
-		g.draw(screen, viewer_pos=(vx, vy, vz))
-
-		pts = g.plane_list[4].get_points(viewer_pos=(vx, vy, vz))
-		img.draw2(screen, pts)		
+		#plane1.draw(screen, viewer_pos = center)
+		img.draw2(screen, pts)
 
 		pygame.display.flip()
+
 
 
 
