@@ -49,7 +49,7 @@ class Plane():
 	def __init__(self, point_list=[]):
 		self.point_list = point_list
 
-	def rot(self, center, a):
+	def rot(self, center, a, b, g):
 
 		m_a = np.array([[cos(a), -sin(a)], [sin(a), cos(a)]])
 
@@ -90,9 +90,9 @@ class PlaneGroup():
 		for plane in self.plane_list:
 			plane.draw(display, viewer_pos = viewer_pos)
 
-	def rot(self, center, a):
+	def rot(self, center, a, b, g):
 		for plane in self.plane_list:
-			plane.rot(center, a)
+			plane.rot(center, a, b, g)
 
 class Img:
 	def __init__(self, fname=None, w=200, h=200):

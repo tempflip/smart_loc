@@ -63,10 +63,16 @@ def run():
 			vz -= 1
 
 		if keys[K_a] :
-			g.rot(center, -pi / 100)
+			g.rot(center, -pi / 100, 0, 0)
 
 		if keys[K_d] :
-			g.rot(center, pi / 100)
+			g.rot(center, pi / 100, 0, 0)
+
+		if keys[K_w] :
+			g.rot(center, 0, -pi / 100, 0)
+
+		if keys[K_s] :
+			g.rot(center, 0, pi / 100, 0)
 
 		if keys[K_SPACE] :
 			pass
