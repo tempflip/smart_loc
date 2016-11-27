@@ -52,16 +52,27 @@ class Plane():
 	def rot(self, center, a, b, g):
 
 		m_a = np.array([[cos(a), -sin(a)], [sin(a), cos(a)]])
-
+		m_b = np.array([[cos(b), -sin(b)], [sin(b), cos(b)]])
+		m_g = np.array([[cos(g), -sin(g)], [sin(g), cos(g)]])
 
 		for p in self.point_list:
 			norm_x = p.x - center[0]
 			norm_y = p.y - center[1]
 			norm_z = p.z - center[1]
 
-
 			coord = np.dot(m_a, np.array([[norm_x], [norm_y]]) )
-			p.set_coord(coord[0][0] + center[0], coord[1][0] + center[1], p.z)
+			norm_x = coord[0][0]
+			norm_y = coord[1][0]
+
+			coord = np.dot(m_b, np.array([[norm_x], [norm_z]]))
+			norm_x = coord[0][0]
+			norm_z = coord[1][0]		
+
+			coord = np.dot(m_g, np.array([[norm_y], [norm_z]]))
+			norm_y = coord[0][0]
+			norm_z = coord[1][0]
+
+			p.set_coord(norm_x + center[0], norm_y + center[1], norm_z + center[2])
 
 
 	def draw(self, pygame_display, color = (255, 255, 255), viewer_pos=(150, 150, 100)):

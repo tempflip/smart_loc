@@ -74,6 +74,12 @@ def run():
 		if keys[K_s] :
 			g.rot(center, 0, pi / 100, 0)
 
+		if keys[K_z] :
+			g.rot(center, 0, 0, -pi / 100)
+
+		if keys[K_c] :
+			g.rot(center, 0, 0, pi / 100)
+
 		if keys[K_SPACE] :
 			pass
 
