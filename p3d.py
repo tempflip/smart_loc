@@ -106,15 +106,20 @@ class PlaneGroup():
 			plane.rot(center, a, b, g)
 
 class Img:
-	def __init__(self, fname=None, w=200, h=200):
+	def __init__(self, fname=None, img_array=None, w=200, h=200):
 		self.shear_matrix = None
 		self.scale_matrix = None
 		self.rot_matrix = None
 		self.w = w
 		self.h = h
 
+		self.rendered_map = {} 
+
 		if fname != None:
 			self.image = self.get_img(fname)
+		elif img_array != None:
+			self.img = cv2.cvtColor(cv2.resize(img_array, (w, h)), cv2.COLOR_BGR2GRAY)
+
 		self.set_scale(1)
 		self.set_shear((0,0))
 		self.set_rot(0, (0, 0))
@@ -153,19 +158,20 @@ class Img:
 	# dest : (4,2) numpy list of destination points
 
 	def draw2(self, pygame_display, dest):
-		src = np.zeros((4, 2), dtype="float32")
-		dst = order_points(dest)
+		if (tuple(dest) not in self.rendered_map) :
+			src = np.zeros((4, 2), dtype="float32")
+			dst = order_points(dest)
 
-		src[1] = [self.w, 0]
-		src[2] = [self.w, self.h]
-		src[3] = [0, self.h]
+			src[1] = [self.w, 0]
+			src[2] = [self.w, self.h]
+			src[3] = [0, self.h]
 
-		M = cv2.getPerspectiveTransform(src, dst)
+			M = cv2.getPerspectiveTransform(src, dst)
 
-		warped = cv2.warpPerspective(self.img, M, (dst[1][0], dst[2][1]))
-		#plt.imshow(warped, interpolation="none")
-		#plt.show()
-		for y, row  in enumerate(warped):
+			self.rendered_map[tuple(dest)] = cv2.warpPerspective(self.img, M, (dst[1][0], dst[2][1]))
+
+
+		for y, row  in enumerate(self.rendered_map[tuple(dest)]):
 			for x, pix in enumerate(row):
 				if pix == 0 : continue
 				pygame_display.set_at((x,y), (pix, pix, pix))
@@ -205,8 +211,6 @@ class Img:
 
 		self.trans_matrix = np.dot(self.scale_matrix, self.shear_matrix)
 		self.trans_matrix = np.dot(self.trans_matrix, self.rot_matrix)
-		print "trans_matrix:", self.trans_matrix
-		print "inv", np.linalg.inv(self.trans_matrix)
 
 	def set_trans_matrix(self, m):
 		self.trans_matrix = np.array(m)

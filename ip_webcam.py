@@ -2,15 +2,28 @@ import requests
 from requests_futures.sessions import FuturesSession
 import unirest
 import math
+import cv2
+import numpy as np
+
+
 
 class ip_webcam:
 	def __init__(self, endpoint = 'http://192.168.0.190:8080/sensors.json', sense = []):
 		self.endpoint = endpoint + '?sense=' + ','.join(sense)
 		self.sense_stack = []
 		self.sense = sense
+		self.use_as_camera = False
+		self.photo = None
+
+		if ('photo' in sense):
+			self.use_as_camera = True
 
 	def sense_async(self):
-		unirest.get(self.endpoint, callback = self.result_callback)
+		callback = self.result_callback
+		if (self.use_as_camera == True):
+			callback = self.photo_callback
+
+		unirest.get(self.endpoint, callback = callback)
 
 	def result_callback(self, r):
 		# adding the last sense data for every sense
@@ -27,6 +40,13 @@ class ip_webcam:
 		return self.sense_stack.pop()
 
 
+	def photo_callback(self, r):
+		arr = np.asarray(bytearray(r.raw_body), dtype=np.uint8)
+		img = cv2.imdecode(arr,-1)
+		self.photo = img
+
+	def photo_available(self):
+		return self.photo != None
 
 # returns (rotation_axis, rot_angle)
 def calc_rot(x, y, z, w):
