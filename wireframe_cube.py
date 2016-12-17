@@ -76,7 +76,7 @@ class Simulation:
 
         TO_DEG = 57.2958
 
-        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.0.190:8080/sensors.json', sense=['gyro', 'rot_vector'])
+        cam = ip_webcam.ip_webcam(endpoint = 'http://192.168.1.102:8080/sensors.json', sense=['gyro', 'rot_vector'])
 
         FPS = 50
         sense_ticker = 0

@@ -4,21 +4,27 @@ import unirest
 import math
 import cv2
 import numpy as np
+import time
 
 
 
 class ip_webcam:
-	def __init__(self, endpoint = 'http://192.168.0.190:8080/sensors.json', sense = []):
+	def __init__(self, endpoint = 'http://192.168.0.190:8080/sensors.json', sense = [], max_callouts_per_sec = 5):
 		self.endpoint = endpoint + '?sense=' + ','.join(sense)
 		self.sense_stack = []
 		self.sense = sense
 		self.use_as_camera = False
 		self.photo = None
+		self.max_callouts_per_sec = max_callouts_per_sec
+		self.last_callout = time.time()
 
 		if ('photo' in sense):
 			self.use_as_camera = True
 
 	def sense_async(self):
+		if (time.time() - self.last_callout) < (1. / self.max_callouts_per_sec): return
+		self.last_callout = time.time()
+
 		callback = self.result_callback
 		if (self.use_as_camera == True):
 			callback = self.photo_callback
@@ -48,6 +54,9 @@ class ip_webcam:
 	def photo_available(self):
 		return self.photo != None
 
+
+
+#### DEPRECATED
 # returns (rotation_axis, rot_angle)
 def calc_rot(x, y, z, w):
 	# x = rotationAxisX * sin(rot_angle / 2)
@@ -77,6 +86,8 @@ def calc_rot(x, y, z, w):
 
 	return (rot_axis_x, rot_axis_y, rot_axis_z), theta_per_2 * 2
 
+
+#### DEPRECATED
 # turns a 3d vector to 2 angles: (alpha, beta)
 def rot_axis_to_angle(x, y, z):
 	""" the math:
@@ -101,21 +112,37 @@ def rot_axis_to_angle(x, y, z):
 	alpha = math.acos( x / math.cos(beta))
 	return alpha, beta
 
+
+def quaternion_to_eulerian_angle(x,y,z,w):
+	ysqr = y * y
+
+	# roll -> x
+	t0 = 2. * (w * x + y * z)
+	t1 = 1. - 2. * (x * x + ysqr)
+	roll = math.atan2(t0, t1)
+
+	# pitch -> y
+	t2 = 2. * (w * y - z * x);
 	
-"""
+	if t2 > 1. : t2 = 1
+	if t2 < -1.: t2 = -1.
+	pitch = math.asin(t2)
 	
-	def get_sensors(self, sense=[]):
-		url = self.endpoint + '?sense=' + ','.join(sense)
-		print url
-		r = requests.get(url)
-		return r.json()
+	# yaw -> z
+	t3 = 2. * (w * z + x * y);
+	t4 = 1. - 2. * (ysqr + z * z);  
+	yaw = math.atan2(t3, t4);
 
-	def desc_sense(self, sense):
-		d = self.get_sensors(sense=[sense])
-		return d[sense]['desc']
+	return roll, pitch, yaw
 
-	def sense_once(self, sense):
-		d = self.get_sensors(sense=[sense])
-		return d[sense]['data'][-1]
 
-"""
+
+
+
+
+
+
+
+
+
+

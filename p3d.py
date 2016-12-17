@@ -9,8 +9,13 @@ import matplotlib.pyplot as plt
 TO_DEG = 57.2958
 
 class P3d:
-	def __init__(self, x = 0, y = 0, z = 0):
+	def __init__(self, x = 0, y = 0, z = 0, vec = None):
 		self.x, self.y, self.z = x, y, z
+		if vec != None:
+			self.x = vec[0]
+			self.y = vec[1]
+			self.z = vec[2]
+
 
 	def __str__(self):
 		return "p3d point x: {} y: {} z: {}".format(self.x, self.y, self.z)
