@@ -54,7 +54,9 @@ class Plane():
 	def __init__(self, point_list=[]):
 		self.point_list = point_list
 
-	def rot(self, center, a, b, g):
+	def rot(self, a, b, g, center=None):
+
+		if center == None : center = self.get_center()
 
 		m_a = np.array([[cos(a), -sin(a)], [sin(a), cos(a)]])
 		m_b = np.array([[cos(b), -sin(b)], [sin(b), cos(b)]])
@@ -95,6 +97,16 @@ class Plane():
 			pts.append(p.proj_2d(viewer_pos=viewer_pos))
 		return pts
 
+	def get_center(self):
+		x_sum = 0
+		y_sum = 0
+		z_sum = 0
+		for point in self.point_list:
+			x_sum += point.x
+			y_sum += point.y
+			z_sum += point.z
+		return (x_sum / len(self.point_list), y_sum / len(self.point_list), z_sum / len(self.point_list))
+
 class PlaneGroup():
 	def __init__(self, plane_list=[]):
 		self.plane_list = plane_list
@@ -106,9 +118,9 @@ class PlaneGroup():
 		for plane in self.plane_list:
 			plane.draw(display, viewer_pos = viewer_pos)
 
-	def rot(self, center, a, b, g):
+	def rot(self, a, b, g, center=None):
 		for plane in self.plane_list:
-			plane.rot(center, a, b, g)
+			plane.rot(a, b, g, center=center)
 
 class Img:
 	def __init__(self, fname=None, img_array=None, w=200, h=200):

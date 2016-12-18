@@ -71,22 +71,22 @@ def run():
 			vz -= 1
 
 		if keys[K_a] :
-			g.rot(center, -pi / 100, 0, 0)
+			g.rot(-pi / 100, 0, 0)
 
 		if keys[K_d] :
-			g.rot(center, pi / 100, 0, 0)
+			g.rot(pi / 100, 0, 0)
 
 		if keys[K_w] :
-			g.rot(center, 0, -pi / 100, 0)
+			g.rot(0, -pi / 100, 0)
 
 		if keys[K_s] :
-			g.rot(center, 0, pi / 100, 0)
+			g.rot(0, pi / 100, 0)
 
 		if keys[K_z] :
-			g.rot(center, 0, 0, -pi / 100)
+			g.rot(0, 0, -pi / 100)
 
 		if keys[K_c] :
-			g.rot(center, 0, 0, pi / 100)
+			g.rot(0, 0, pi / 100)
 
 		if keys[K_SPACE] :
 			pass
@@ -112,9 +112,9 @@ def run():
 				pitch = pitch_
 				yaw = yaw_
 
-				g.rot(center, 0,0, d_roll)
-				g.rot(center, d_pitch, 0, 0)
-				g.rot(center, 0, d_yaw, 0)
+				g.rot(0,0, d_roll, center)
+				g.rot(d_pitch, 0, 0, center)
+				g.rot(0, d_yaw, 0, center)
 
 
 		clock.tick(FPS)

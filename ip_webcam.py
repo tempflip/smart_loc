@@ -5,11 +5,11 @@ import math
 import cv2
 import numpy as np
 import time
-
+import copy
 
 
 class ip_webcam:
-	def __init__(self, endpoint = 'http://192.168.0.190:8080/sensors.json', sense = [], max_callouts_per_sec = 5):
+	def __init__(self, endpoint = 'http://192.168.0.190:8080/sensors.json', sense = [], max_callouts_per_sec = 5, all_points=False):
 		self.endpoint = endpoint + '?sense=' + ','.join(sense)
 		self.sense_stack = []
 		self.sense = sense
@@ -17,6 +17,9 @@ class ip_webcam:
 		self.photo = None
 		self.max_callouts_per_sec = max_callouts_per_sec
 		self.last_callout = time.time()
+		self.all_points = all_points
+		self.timestamp_map = {}
+		self._timestamp_map = {}
 
 		if ('photo' in sense):
 			self.use_as_camera = True
@@ -36,8 +39,14 @@ class ip_webcam:
 		sense_map = {}
 		for s in self.sense:
 			sense_map[s] = r.body[s]['data'][-1]
+
+			if self.all_points == True:
+				if s not in self.timestamp_map: self.timestamp_map[s] = {}
+				for point in r.body[s]['data']:
+					self.timestamp_map[s][point[0]] = point[1]
 		
 		self.sense_stack.append(sense_map)
+		self._timestamp_map = copy.deepcopy(self.timestamp_map)
 
 	def sense_avail(self):
 		return len(self.sense_stack) > 0
@@ -54,6 +63,14 @@ class ip_webcam:
 	def photo_available(self):
 		return self.photo != None
 
+	def get_time_points(self, key):
+		if key in self._timestamp_map:
+			points = []
+			for k in self._timestamp_map[key]:
+				points.append([k, self._timestamp_map[key][k][0], self._timestamp_map[key][k][1], self._timestamp_map[key][k][2]])
+				points.sort(key=lambda x:x[0])
+			return points[-100:]
+		else: return []
 
 
 #### DEPRECATED
